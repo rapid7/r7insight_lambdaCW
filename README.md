@@ -75,6 +75,3 @@
 
 5. Watch your logs come in:
    * Navigate to your Rapid 7 account and watch your CloudWatch logs appear
-   
-## Contact Support
-Please email our support team at support@rapid7.com if you need any help.
