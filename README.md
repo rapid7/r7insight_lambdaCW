@@ -18,7 +18,7 @@
 
 3. Configure function:
    * Give your function a name
-   * Set runtime to Python 2.7
+   * Set runtime to Python 3.6
 
 4. Upload function code:
       * Create a .ZIP file, containing ```r7insight_lambdaCW.py``` and the folder ```certifi```
