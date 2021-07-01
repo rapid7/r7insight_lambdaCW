@@ -1,12 +1,12 @@
 import logging
 import json
-import gzip
 import socket
 import ssl
 import certifi
-from StringIO import StringIO
 import os
 from uuid import UUID
+import base64
+import zlib
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -14,32 +14,31 @@ logger.setLevel(logging.INFO)
 logger.info('Loading function...')
 
 REGION = os.environ.get('region')
-ENDPOINT = '{}.data.logs.insight.rapid7.com'.format(REGION)
+ENDPOINT = f'{REGION}.data.logs.insight.rapid7.com'
 PORT = 20000
 TOKEN = os.environ.get('token')
-LINE = u'\u2028'.encode('utf-8')
-
-def treat_message(message):
-    return message.replace('\n', LINE)
 
 
 def lambda_handler(event, context):
     sock = create_socket()
 
     if not validate_uuid(TOKEN):
-        logger.critical('{} is not a valid token. Exiting.'.format(TOKEN))
+        logger.critical(f'{TOKEN} is not a valid token. Exiting.')
         raise SystemExit
     else:
-        cw_data = str(event['awslogs']['data'])
-        cw_logs = gzip.GzipFile(fileobj=StringIO(cw_data.decode('base64', 'strict'))).read()
+        cw_data = base64.b64decode(event['awslogs']['data'])
+        cw_logs = zlib.decompress(cw_data, 16+zlib.MAX_WBITS)
         log_events = json.loads(cw_logs)
         logger.info('Received log stream...')
+        logger.info(log_events)
         for log_event in log_events['logEvents']:
             # look for extracted fields, if not present, send plain message
             try:
-                sock.sendall('{} {}\n'.format(TOKEN, json.dumps(log_event['extractedFields'])))
+                msg = f"{TOKEN} {json.dumps(log_event['extractedFields'])}\n"
+                sock.sendall(msg.encode('utf-8'))
             except KeyError:
-                sock.sendall('{} {}\n'.format(TOKEN, treat_message(log_event['message'])))
+                msg = f"{TOKEN} {log_event['message']}\n"
+                sock.sendall(msg.encode('utf-8'))
 
     sock.close()
     logger.info('Function execution finished.')
@@ -64,17 +63,17 @@ def create_socket():
         suppress_ragged_eofs=True,
     )
     try:
-        logger.info('Connecting to {}:{}'.format(ENDPOINT, PORT))
+        logger.info(f'Connecting to {ENDPOINT}:{PORT}')
         s.connect((ENDPOINT, PORT))
         return s
-    except socket.error, exc:
-        logger.error('Exception socket.error : {}'.format(exc))
+    except socket.error as exc:
+        logger.error(f'Exception socket.error : {exc}')
 
 
 def validate_uuid(uuid_string):
     try:
         val = UUID(uuid_string)
     except Exception as uuid_exc:
-        logger.error('Can not validate token: {}'.format(uuid_exc))
+        logger.error(f'Can not validate token: {uuid_exc}')
         return False
     return val.hex == uuid_string.replace('-', '')
