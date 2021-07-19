@@ -42,7 +42,7 @@ def lambda_handler(event, context):
                 msg = f"{TOKEN} {json.dumps(log_event['extractedFields'])}\n"
                 sock.sendall(msg.encode('utf-8'))
             except KeyError:
-                treated_msg=treat_message(log_event['message'])
+                treated_msg = treat_message(log_event['message'])
                 msg = f"{TOKEN} {treated_msg}\n"
                 sock.sendall(msg.encode('utf-8'))
 
