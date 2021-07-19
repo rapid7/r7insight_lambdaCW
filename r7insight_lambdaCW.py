@@ -17,11 +17,16 @@ REGION = os.environ.get('region')
 ENDPOINT = f'{REGION}.data.logs.insight.rapid7.com'
 PORT = 20000
 TOKEN = os.environ.get('token')
-LINE = u'\u2028'
+FAKE_NEWLINE = u'\u2028'
 
 
 def treat_message(message):
-    return message.replace('\n',LINE)
+	"""
+	Replace newline characters in the supplied message with "fake"
+	unicode line breaks (\u2028), so that the message can be sent
+	as a single log event.
+	"""		
+    return message.replace('\n', FAKE_NEWLINE)
 
 
 def lambda_handler(event, context):
