@@ -21,11 +21,11 @@ FAKE_NEWLINE = u'\u2028'
 
 
 def treat_message(message):
-	"""
-	Replace newline characters in the supplied message with "fake"
-	unicode line breaks (\u2028), so that the message can be sent
-	as a single log event.
-	"""		
+    """
+    Replace newline characters in the supplied message with "fake"
+    unicode line breaks (\u2028), so that the message can be sent
+    as a single log event.
+    """
     return message.replace('\n', FAKE_NEWLINE)
 
 
