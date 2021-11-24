@@ -9,69 +9,59 @@
 
 ## Obtain log token(s)
 1. Log in to your Rapid 7 account
-2. Add a new [token based log](https://insightops.help.rapid7.com/docs/token-tcp)
+1. Add a new [token based log](https://insightops.help.rapid7.com/docs/token-tcp)
 
 ## Deploy the script on AWS Lambda
-1. Create a new Lambda function
+1. Create a new Lambda function using the "Author from scratch" option
 
-2. On the "Select Blueprint" screen, press "Skip"
-
-3. Configure function:
+1. Configure function:
    * Give your function a name
-   * Set runtime to Python 3.6
+   * Set runtime to Python 3.9
+   * Leave other options to default
 
-4. Upload function code:
+1. Upload function code:
       * Create a .ZIP file, containing ```r7insight_lambdaCW.py``` and the folder ```certifi```
         * Make sure the files and ```certifi``` folder are in the **root** of the ZIP archive
+        * Note if you download the .ZIP file directly from GitHub, the contents are inside a subfolder
       * Choose "Upload a .ZIP file" in "Code entry type" dropdown and upload the archive created in previous step
 
-5. Lambda function handler and role
+1. Lambda function handler
    * Change the "Handler" value to ```r7insight_lambdaCW.lambda_handler```
-   * Create a new basic execution role (your IAM user must have sufficient permissions to create & assign new roles)
 
-6. Set Environment Variables:
-   * Token value should match UUID provided by Rapid 7 UI or API
-   * Region should be that of your Rapid 7 account
+1. Set Environment Variables:
+   * Token value should match UUID provided by Rapid7 UI or API
+   * Region should be that of your Rapid7 account
 
-   | Key       | Value      |
-   |-----------|------------|
-   | region    | eu / us    |
-   | token     | token uuid |
+   | Key       | Value         |
+   |-----------|---------------|
+   | region    | eu / us / etc |
+   | token     | token uuid    |
 
-7. Allocate resources:
-   * Set memory to 128 MB (adjust to your needs)
-   * Set timeout to ~2 minutes (adjust to your needs)
+1. Optional configuration (adjust to your needs):
+   * Increase memory
+   * Increase timeout
 
-8. Enable function:
-   * Click "Create function"
+1. Deploy the lambda function
+   * At this point you can validate the configuration by sending a test event
+   * Select "configure test event" and use "cloudwatch-logs" as the template
+   * Send the test event and verify that its contents are forwarded to your log
 
 ## Configure CloudWatch Stream
 1. Create a new stream:
    * Select CloudWatch log group
-   * Navigate to "Actions / Stream to AWS Lambda"
+   * Navigate to "Subscription filters / Create Lambda subscription filter"
 
-   ![Stream to Lambda](https://github.com/rapid7/r7insight_lambdaCW/blob/master/doc/step9.png?raw=true)
+   ![Stream to Lambda](https://github.com/rapid7/r7insight_lambdaCW/blob/master/doc/stream_to_lambda.png?raw=true)
 
-2. Choose destination Lambda function:
-   * Select the AWS Lambda function deployed earlier from drop down menu
-   * Click "Next" at the bottom of the page
-
-   ![Select Function](https://github.com/rapid7/r7insight_lambdaCW/blob/master/doc/step10.png?raw=true)
-
-3. Configure log format:
-   * Choose the correct log format from drop down menu
-   * Specify subscription filter pattern
+1. Choose destination Lambda function:
+   * Select the AWS Lambda function deployed earlier from the dropdown menu
+   * Optionally configure log formatting and filtering, if needed
      * [Please see AWS Documentation for more details](http://docs.aws.amazon.com/AmazonCloudWatch/latest/DeveloperGuide/FilterAndPatternSyntax.html)
-     * If this is blank / incorrect, only raw data will be forwarded to Rapid 7
+     * If this is blank or incorrect, only raw data will be forwarded to Rapid7
      * Amazon provide preconfigured filter patterns for some log types
-   * Click "Next" at the bottom of the page
 
-   ![Log Format](https://github.com/rapid7/r7insight_lambdaCW/blob/master/doc/step11.png?raw=true)
+1. Review and start log stream
+   * Review your configuration and click "Start streaming" at the bottom of the page
 
-4. Review and start log stream
-   * Review your configuration and click "Start Streaming" at the bottom of the page
-
-   ![Start stream](https://github.com/rapid7/r7insight_lambdaCW/blob/master/doc/step6.png?raw=true)
-
-5. Watch your logs come in:
-   * Navigate to your Rapid 7 account and watch your CloudWatch logs appear
+1. Watch your logs come in:
+   * Navigate to your Rapid7 account and watch your CloudWatch logs appear
