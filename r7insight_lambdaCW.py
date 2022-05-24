@@ -7,6 +7,7 @@ import os
 from uuid import UUID
 import base64
 import zlib
+import boto3
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -16,7 +17,6 @@ logger.info('Loading function...')
 REGION = os.environ.get('region')
 ENDPOINT = f'{REGION}.data.logs.insight.rapid7.com'
 PORT = 20000
-TOKEN = os.environ.get('token')
 FAKE_NEWLINE = u'\u2028'
 
 
@@ -30,10 +30,11 @@ def treat_message(message):
 
 
 def lambda_handler(event, context):
+    token = get_token()
     sock = create_socket()
 
-    if not validate_uuid(TOKEN):
-        logger.critical(f'{TOKEN} is not a valid token. Exiting.')
+    if not validate_uuid(token):
+        logger.critical(f'{token} is not a valid token. Exiting.')
         raise SystemExit
     else:
         cw_data = base64.b64decode(event['awslogs']['data'])
@@ -44,11 +45,11 @@ def lambda_handler(event, context):
         for log_event in log_events['logEvents']:
             # look for extracted fields, if not present, send plain message
             try:
-                msg = f"{TOKEN} {json.dumps(log_event['extractedFields'])}\n"
+                msg = f"{token} {json.dumps(log_event['extractedFields'])}\n"
                 sock.sendall(msg.encode('utf-8'))
             except KeyError:
                 treated_msg = treat_message(log_event['message'])
-                msg = f"{TOKEN} {treated_msg}\n"
+                msg = f"{token} {treated_msg}\n"
                 sock.sendall(msg.encode('utf-8'))
 
     sock.close()
@@ -88,3 +89,12 @@ def validate_uuid(uuid_string):
         logger.error(f'Can not validate token: {uuid_exc}')
         return False
     return val.hex == uuid_string.replace('-', '')
+
+
+def get_token():
+    token_secret_name = os.environ.get('token_secret_name')
+    if token_secret_name:
+        sm_client = boto3.client("secretsmanager")
+        return sm_client.get_secret_value(SecretId=token_secret_name)["SecretString"]
+    else:
+        return os.environ.get('token')
