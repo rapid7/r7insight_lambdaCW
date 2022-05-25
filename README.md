@@ -32,10 +32,13 @@
    * Token value should match UUID provided by Rapid7 UI or API
    * Region should be that of your Rapid7 account
 
-   | Key       | Value         |
-   |-----------|---------------|
-   | region    | eu / us / etc |
-   | token     | token uuid    |
+   |         Key         |                                                   Value                                                   |
+   | ------------------- | --------------------------------------------------------------------------------------------------------- |
+   | region              | eu / us / etc                                                                                             |
+   | token\*             | token uuid                                                                                                |
+   | token_secret_name\* | the name of a [secrets manager](https://aws.amazon.com/secrets-manager/) secret containing the token uuid |
+
+   \* Only one of the `token` or `token_secret_name` environment variables should be set. If you use `token_secret_name`, be sure to grant `secretsmanager:GetSecretValue` to the lambda function's execution role.
 
 1. Optional configuration (adjust to your needs):
    * Increase memory
