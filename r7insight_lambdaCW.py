@@ -58,21 +58,16 @@ def lambda_handler(event, context):
 
 def create_socket():
     logger.info('Creating SSL socket')
+    context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+    context.load_verify_locations(certifi.where())
+
     s_ = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s = ssl.wrap_socket(
+    s = context.wrap_socket(
         sock=s_,
-        keyfile=None,
-        certfile=None,
         server_side=False,
-        cert_reqs=ssl.CERT_REQUIRED,
-        ssl_version=getattr(
-            ssl,
-            'PROTOCOL_TLSv1_2',
-            ssl.PROTOCOL_TLSv1
-        ),
-        ca_certs=certifi.where(),
         do_handshake_on_connect=True,
         suppress_ragged_eofs=True,
+        server_hostname=ENDPOINT,
     )
     try:
         logger.info(f'Connecting to {ENDPOINT}:{PORT}')
