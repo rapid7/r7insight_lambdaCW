@@ -1,0 +1,15 @@
+---
+info:
+  title: R7insight Lambdacw
+  description: Lambda function for sending AWS CloudWatch logs to Rapid 7
+  x-cortex-git:
+    github:
+      alias: r7org
+      repository: rapid7/r7insight_lambdaCW
+  x-cortex-tag: r7insight-lambdacw
+  x-cortex-type: service
+  x-cortex-domain-parents:
+  - tag: insightidr
+openapi: 3.0.1
+servers:
+- url: "/"
