@@ -69,13 +69,20 @@ def create_socket():
         suppress_ragged_eofs=True,
         server_hostname=ENDPOINT,
     )
-    try:
-        logger.info(f'Connecting to {ENDPOINT}:{PORT}')
-        s.connect((ENDPOINT, PORT))
-        return s
-    except socket.error as exc:
-        logger.error(f'Exception socket.error : {exc}')
-
+    
+    # Retry logic to handle connection errors
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            logger.info(f'Connecting to {ENDPOINT}:{PORT} (attempt {attempt + 1}/{max_retries})')
+            s.connect((ENDPOINT, PORT))
+            return s
+        except socket.error as exc:
+            if attempt == max_retries - 1:
+                logger.error(f'Failed to connect after {max_retries} attempts. Final exception: {exc}')
+                raise # Raise the exception to the caller
+            else:
+                logger.warning(f'Connection attempt {attempt + 1} failed: {exc}. Retrying...')
 
 def validate_uuid(uuid_string):
     try:
